@@ -16,9 +16,9 @@
     <h2 class="font-medium">Enter UK Addresses</h2>
 
     <template x-for="(address, index) in addresses" :key="index">
-      <div class="relative text-gray-400">
+      <div class="relative ">
         <div class="flex relative items-center">
-          <p x-text="index+1" class="mr-2"></p>
+          <p x-text="index+1" class="mr-2 text-gray-400"></p>
 
           <input x-model="addresses[index]" @input="fetchAutocompleteSuggestions(index)" type="text" placeholder="Enter an address"
             class="w-full p-3 border rounded-md ring-offset-background placeholder:text-neutral-500 focus:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400">
@@ -31,7 +31,7 @@
             </svg></button>
         </div>
 
-        <ul class="mt-1 border rounded-md" x-show="suggestions[index].length != 0">
+        <ul class="mt-2 border rounded-md" x-show="suggestions[index].length != 0">
           <template x-for="suggestion in suggestions[index]">
             <li x-text="suggestion" @click="selectSuggestion(index, suggestion)" class="p-2 hover:bg-gray-100 cursor-pointer"></li>
           </template>
