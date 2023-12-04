@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Dynamic Address Inputs with Google Maps</title>
+  <!-- Viewport Meta Tag for Mobile Optimization -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Load Alpine.js (You can use a CDN) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="p-4 pb-36">
+
+  <div x-data="addressApp()" class="relative flex flex-col space-y-3 w-full max-w-screen-sm mx-auto ">
+    <h2 class="font-medium">Enter UK Addresses</h2>
+
+    <template x-for="(address, index) in addresses" :key="index">
+      <div class="relative text-gray-400">
+        <div class="flex relative items-center">
+          <p x-text="index+1" class="mr-2"></p>
+
+          <input x-model="addresses[index]" @input="fetchAutocompleteSuggestions(index)" type="text" placeholder="Enter an address"
+            class="w-full p-3 border rounded-md ring-offset-background placeholder:text-neutral-500 focus:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400">
+          <button x-on:click="deleteAddress(index)"
+            class=" absolute top-0 right-0 -translate-y-1/3 translate-x-1/3 bg-white p-2 rounded "><svg xmlns="http://www.w3.org/2000/svg"
+              width="24" height="24" fill="#ff3856" viewBox="0 0 256 256">
+              <path
+                d="M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM112,168a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm0-120H96V40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8Z">
+              </path>
+            </svg></button>
+        </div>
+
+        <ul class="mt-1 border rounded-md" x-show="suggestions[index].length != 0">
+          <template x-for="suggestion in suggestions[index]">
+            <li x-text="suggestion" @click="selectSuggestion(index, suggestion)" class="p-2 hover:bg-gray-100 cursor-pointer"></li>
+          </template>
+        </ul>
+      </div>
+    </template>
+
+    <button x-on:click="addAddress()" class="flex mx-auto">
+      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="#2563eb" viewBox="0 0 256 256">
+        <path
+          d="M128,24A104,104,0,1,0,232,128,104.13,104.13,0,0,0,128,24Zm40,112H136v32a8,8,0,0,1-16,0V136H88a8,8,0,0,1,0-16h32V88a8,8,0,0,1,16,0v32h32a8,8,0,0,1,0,16Z">
+        </path>
+      </svg> </button>
+    <div class="fixed bottom-0 left-0 bg-white p-4 w-full drop-shadow-2xl border-t">
+      <button x-on:click="openGoogleMaps()"
+        class="w-full items-center justify-center px-4 py-4  font-medium tracking-wide text-white transition-colors duration-200 bg-blue-600 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-700 focus:shadow-outline focus:outline-none">Open
+        in Google Maps</button>
+    </div>
+  </div>
+
+  <script>
+    function addressApp() {
+      return {
+        addresses: [''],
+        suggestions: [[]],
+        fetchTimeouts: [],
+
+        addAddress() {
+          this.addresses.push('');
+          this.suggestions.push([]);
+          this.fetchTimeouts.push(null);
+        },
+
+        deleteAddress(index) {
+          this.addresses.splice(index, 1);
+          this.suggestions.splice(index, 1);
+          this.fetchTimeouts.splice(index, 1);
+        },
+
+        fetchAutocompleteSuggestions(index) {
+          clearTimeout(this.fetchTimeouts[index]);
+          this.fetchTimeouts[index] = setTimeout(() => {
+            const apiKey = '368c61d42c0649bfa2e00c2ca36811a6';
+            const text = this.addresses[index];
+
+            fetch(`https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(text)}&filter=countrycode:gb&apiKey=${apiKey}`)
+              .then(response => response.json())
+              .then(result => {
+                this.suggestions[index] = result.features.map(feature => feature.properties.formatted);
+              })
+              .catch(error => console.error('error', error));
+          }, 300); // 300ms debounce time
+        },
+
+        selectSuggestion(index, suggestion) {
+          this.addresses[index] = suggestion;
+          this.suggestions[index] = [];
+        },
+        openGoogleMaps() {
+          if (this.addresses.length < 2) {
+            alert('Please enter at least two addresses.');
+            return;
+          }
+          var googleMapsUrl = 'https://www.google.com/maps/dir/';
+          this.addresses.forEach(address => {
+            if (address.trim() !== '') {
+              googleMapsUrl += encodeURIComponent(address.trim()) + '/';
+            }
+          });
+          window.open(googleMapsUrl, '_blank');
+        }
+      };
+    }
+  </script>
+</body>
+
+</html>
